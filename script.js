@@ -58,6 +58,6 @@ function keysDown(e) {
   keys[e.keyCode] = true;
 }
 
-function keyUp(e) {
+function keysUp(e) {
   keys[e.keyCode] = false;
 }
