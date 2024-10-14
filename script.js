@@ -32,12 +32,12 @@ function clickmoment(e){
 function gameLoop() {
   // W
   if (keys[87]) {
-    player.y += 5;
+    player.y -= 5;
   }
 
   // S
   if (keys[83]) {
-    player.y -= 5;
+    player.y += 5;
   }
 
   // A
