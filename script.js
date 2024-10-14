@@ -19,11 +19,11 @@ let elapsed = 0.0;
 
 document.body.addEventListener("pointerdown", clickmoment);
 
-app.ticker.add((ticker) => {
-  elapsed += ticker.deltaTime;
+// app.ticker.add((ticker) => {
+//   elapsed += ticker.deltaTime;
 
-  player.rotation += 0.1 * ticker.deltaTime;
-});
+//   player.rotation += 0.1 * ticker.deltaTime;
+// });
 
 function clickmoment(e){
   console.log('test')
