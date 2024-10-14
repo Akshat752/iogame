@@ -52,7 +52,7 @@ function gameLoop() {
 }
 
 window.addEventListener("keydown", keysDown);
-widnow.addEventListener("keyup", keysUp);
+window.addEventListener("keyup", keysUp);
 
 function keysDown(e) {
   keys[e.keyCode] = true;
