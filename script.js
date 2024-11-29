@@ -15,6 +15,7 @@ app.stage.addChild(dirtContainer);
 let player = PIXI.Sprite.from(path);
 player.anchor.set(0.5);
 app.stage.addChild(player);
+player.scale.set(0.5); 
 
 // Center the player on the screen
 player.x = window.innerWidth / 2;
