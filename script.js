@@ -1,111 +1,131 @@
-const path = 'resources/player.png';
 const app = new PIXI.Application();
 await app.init({ resizeTo: window });
 globalThis.__PIXI_APP__ = app;
 document.body.appendChild(app.canvas);
 
-await PIXI.Assets.load("resources/dirttile.jpeg");
-await PIXI.Assets.load(path);
+// Load assets
 
-// Create a container for the dirt tiles
+await PIXI.Assets.load(["resources/dirttile.jpeg", 'resources/player.png']);
+
+// Total Map dimensions
+const MAP_WIDTH = 3000; 
+const MAP_HEIGHT = 3000; 
+
+// Tile grid size
+const gridSize = 60;
+
+// Create the container for the dirt tiles
 const dirtContainer = new PIXI.Container();
 app.stage.addChild(dirtContainer);
 
-// Add the player sprite
-let player = PIXI.Sprite.from(path);
+// Add the player sprite (fixed starting point at center)
+const player = PIXI.Sprite.from('resources/player.png');
 player.anchor.set(0.5);
-app.stage.addChild(player);
-player.scale.set(0.5); 
-
-// Center the player on the screen
-player.x = window.innerWidth / 2;
+player.scale.set(0.5);
+player.x = app.screen.width / 2;
 player.y = app.screen.height / 2;
+app.stage.addChild(player);
 
 let keys = {};
-let zoomLevel = 1;
-app.stage.scale.set(zoomLevel);
 
-// app.stage.position.set((window.innerWidth / 2) - (player.x * zoomLevel), (window.innerHeight / 2) - (player.y * zoomLevel));
+// Create text to display coordinates
+const coordinatesText = new PIXI.Text("(x, y)", {
+    fontSize: 24,
+    fill: "#ffffff",
+    fontFamily: "Arial",
+});
+coordinatesText.x = 10; // Fixed position on the screen
+coordinatesText.y = 10;
+app.stage.addChild(coordinatesText);
 
-// window.addEventListener("wheel", (e) => {
-//     const zoomIntensity = 0.1;
-  
-//     if (e.deltaY > 0) {
-//         zoomLevel = Math.max(0.09, zoomLevel - zoomIntensity);
-//     } else {
-//         zoomLevel += zoomIntensity;
-//     }
-  
-//     app.stage.scale.set(zoomLevel);
-  
-//     const centerX = window.innerWidth / 2;
-//     const centerY = window.innerHeight / 2;
-  
-//     let shiftX = centerX * (1 - zoomLevel);
-//     let shiftY = centerY * (1 - zoomLevel);
-  
-//     app.stage.position.set(shiftX, shiftY);
-// });
+// Function to create a grid of dirt tiles
+function addGridDirt() {
+    const cols = Math.ceil(MAP_WIDTH / gridSize);
+    const rows = Math.ceil(MAP_HEIGHT / gridSize);
 
-// Function to add dirt tiles in a grid
-function addGridDirt(gridSize) {
-    const zoomOutLevel = 0.09;
-
-    // Calculate the top-left corner's coordinates at maximum zoom-out
-    const topLeftX = (window.innerWidth / 2) * (1 - 1 / zoomOutLevel);
-    const topLeftY = (window.innerHeight / 2) * (1 - 1 / zoomOutLevel);
-
-    // Calculate the world width and height based on max zoom out
-    const worldWidth = window.innerWidth / zoomOutLevel;
-    const worldHeight = window.innerHeight / zoomOutLevel;
-
-    // Calculate the number of rows and columns in the grid
-    const rows = Math.ceil(worldHeight / gridSize);
-    const cols = Math.ceil(worldWidth / gridSize);
-
-    // Add dirt tiles at each grid point
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
             let dirtTile = PIXI.Sprite.from("resources/dirttile.jpeg");
-            dirtTile.x = topLeftX + col * gridSize;
-            dirtTile.y = topLeftY + row * gridSize;
-            dirtContainer.addChild(dirtTile); // Add to dirt container
+            dirtTile.x = col * gridSize;
+            dirtTile.y = row * gridSize;
+            dirtContainer.addChild(dirtTile);
         }
     }
 }
 
-// Call the function with the desired grid size
-const gridSize = 50; // Adjust this value to change grid spacing
-addGridDirt(gridSize);
+// Initialize the grid with tiles
+addGridDirt();
 
-// Game loop function for player-centered movement
-function gameLoop() {
-    const speed = 50;
+// Center the dirt container so the player starts in the middle of the map
+dirtContainer.x = -(MAP_WIDTH / 2 - app.screen.width / 2);
+dirtContainer.y = -(MAP_HEIGHT / 2 - app.screen.height / 2);
 
-    // Move the stage instead of the player
-    if (keys[87]) { // W key
-        app.stage.y += speed; // Move stage down
+// Game loop for movement with extended player bounds
+function gameLoop(delta) {
+    const speed = 5;
+
+    const maxOffsetX = MAP_WIDTH - app.screen.width;
+    const maxOffsetY = MAP_HEIGHT - app.screen.height;
+
+    if (keys['a'] || keys['ArrowLeft']) {
+        if (dirtContainer.x + speed > 0) {
+            if(player.x - speed - player.width/2 > 0)
+                player.x -= speed; 
+        } else {
+            if(player.x > app.screen.width/2)
+                player.x -= speed;
+            else
+                dirtContainer.x += speed;
+        }
     }
-    if (keys[83]) { // S key
-        app.stage.y -= speed; // Move stage up
+    if (keys['d'] || keys['ArrowRight']) {
+        if (dirtContainer.x - speed < -maxOffsetX) {
+            if(player.x + speed + player.width/2 < app.screen.width)
+                player.x += speed;
+        } else {
+            if(player.x < app.screen.width/2)
+                player.x += speed;
+            else
+                dirtContainer.x -= speed;
+        }
     }
-    if (keys[65]) { // A key
-        app.stage.x -= speed; // Move stage right
+
+    if (keys['w'] || keys['ArrowUp']) {
+        if (dirtContainer.y + speed > 0) {
+            if(player.y - speed -player.height/2 > 0)
+                player.y -= speed;
+        } else {
+            if(player.y > app.screen.height / 2)
+                player.y -= speed;
+            else
+                dirtContainer.y += speed;
+        }
     }
-    if (keys[68]) { // D key
-        app.stage.x += speed; // Move stage left
+    if (keys['s'] || keys['ArrowDown']) {
+        if (dirtContainer.y - speed < -maxOffsetY) {
+            if(player.y + speed + player.height/2 < app.screen.height)
+                player.y += speed;
+        } else {
+            if(player.y < app.screen.height / 2)
+                player.y += speed;
+            else
+                dirtContainer.y -= speed;
+        }
     }
+
+    // Update player coordinates relative to the map
+    const playerMapX = Math.abs(dirtContainer.x) + player.x;
+    const playerMapY = Math.abs(dirtContainer.y) + player.y;
+
+    console.log(`(${player.y}`);
+
+    // Update the text
+    coordinatesText.text = `(${Math.floor(playerMapX)}, ${Math.floor(playerMapY)})`;
 }
 
+// Add the game loop to the ticker
 app.ticker.add(gameLoop);
 
-window.addEventListener("keydown", keysDown);
-window.addEventListener("keyup", keysUp);
-
-function keysDown(e) {
-    keys[e.keyCode] = true;
-}
-
-function keysUp(e) {
-    keys[e.keyCode] = false;
-}
+// Event listeners for key presses
+window.addEventListener("keydown", (e) => keys[e.key.toLowerCase()] = true);
+window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
