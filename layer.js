@@ -6,7 +6,7 @@ export class Layer {
 
     createGrid(depth, tileID) {
         return Array.from({ length: depth }, () => 
-            Array.from({ length: 50 }, () => tileId)
+            Array.from({ length: 50 }, () => tileID)
         );
     }
 }
